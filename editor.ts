@@ -31,7 +31,6 @@ function anchorPosition(content) {
 function findNewPosition(content, position) {
   var selection = window.getSelection();
   var fold = function ([done, [node, sofar]], element) {
-    console.log(element);
     if (sofar === 0)
       return [true, [node, sofar]];
     if (element.nodeType === Node.TEXT_NODE) {
@@ -45,14 +44,54 @@ function findNewPosition(content, position) {
     return [false, [node, sofar]];
   };
   var [stop, [node, position]] = walk(content, [false, [content, position]], fold);
-  console.log(stop, position);
   selection.collapse(node, position);
+}
+var colors = ["#e6194B", "#3cb44b", "#ffe119", "#4363d8", "#f58231", "#911eb4", "#42d4f4", "#f032e6", "#bfef45", "#fabebe", "#469990", "#e6beff", "#9A6324", "#fffac8", "#800000", "#aaffc3", "#808000", "#ffd8b1", "#000075", "#a9a9a9", "#ffffff"];
+
+function rainbows (input) : Node[] {
+  let create_char = function (char) {
+    var span = document.createElement('span');
+    span.innerText = char;
+    return span;
+  };
+  let color = function (span, color) {
+    span.style.color = color;
+  }
+  var sofar = "";
+  var element : Node[] = [];
+  var index = -1;
+  for (let char of input.split('')) {
+    if (char == '(') {
+      if (sofar.length)
+        element.push(document.createTextNode(sofar));
+      sofar = "";
+      let el = create_char('(');
+      element.push(el);
+      index++;
+      color(el, colors[index]);
+    } else if (char == ')') {
+      if (sofar.length)
+        element.push(document.createTextNode(sofar));
+      sofar = "";
+      let el = create_char(')');
+      element.push(el);
+      color(el, colors[index]);
+      index--;
+    } else {
+      sofar += char;
+    }
+  }
+  if (sofar.length)
+    element.push(document.createTextNode(sofar));
+  return element;
 }
 
 content.oninput = function() {
   let result = anchorPosition(content);
   output.innerText = String(result);
   let text = content.textContent;
-  content.innerHTML = text.replace(/test/g, '<span style="color:red">test</span>');
+  content.innerHTML = ''; 
+  for (var node of rainbows(text))
+    content.appendChild(node);
   findNewPosition(content, result);
 }
